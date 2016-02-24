@@ -1,5 +1,10 @@
-DOCKER    = docker
-IMAGE     = cross-compiler
+# Name of the project.
+DOCKER_IMAGE = quay.io/coreos/cross-compiler
+
+# Set binaries and platform specific variables.
+DOCKER = docker
+
+# Platforms on which we want to build the project.
 PLATFORMS = \
 	android-arm \
 	android-x64 \
@@ -14,17 +19,17 @@ PLATFORMS = \
 .PHONY: $(PLATFORMS)
 
 all:
-	$(MAKE) base
 	for i in $(PLATFORMS); do \
 		$(MAKE) $$i; \
 	done
 
 base:
-	$(DOCKER) build -t $(IMAGE):base .
+	$(DOCKER) build -t $(DOCKER_IMAGE):base .
 
-$(PLATFORMS):
-	$(DOCKER) build -t $(IMAGE):$@ $@;
+$(PLATFORMS): base
+	$(DOCKER) build -t $(DOCKER_IMAGE):$@ $@;
 
-push:
-	docker tag cross-compiler:$(PLATFORM) quasarhq/cross-compiler:$(PLATFORM)
-	docker push quasarhq/cross-compiler:$(PLATFORM)
+push: $(PLATFORMS)
+	for i in $(PLATFORMS); do \
+		$(DOCKER) push $(DOCKER_IMAGE):$$i; \
+	done
